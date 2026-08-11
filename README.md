@@ -12,16 +12,47 @@ bin/
 install.sh
 ```
 
+## Requirements
+
+- `git` and `bash` 4+
+- GNU coreutils — `install.sh` uses `readlink -f`, which BSD and macOS lack
+- `~/.local/bin` on `PATH`, for `bin/`. The installer skips commands if that
+  directory does not exist; create it first if you want them
+- `gh`, authenticated. The post-landing skill drives `gh pr view`,
+  `gh release view`, and `gh pr edit`
+
 ## Install
 
 ```sh
+git clone https://github.com/pnwilly/dotfiles ~/dotfiles
+cd ~/dotfiles
+
 ./install.sh --dry-run    # print every destination, write nothing
 ./install.sh              # install
 ./install.sh --uninstall  # remove only what this script owns
 ```
 
+The location is not fixed — the script resolves paths from its own directory —
+but everything below assumes `~/dotfiles`.
+
 The script never overwrites a file it did not create. Anything unexpected at a
 destination is reported as `CONFLICT` and left alone, and the run exits `1`.
+
+## Verify
+
+```sh
+ls -l ~/.claude/CLAUDE.md ~/.codex/AGENTS.md   # should be symlinks into this repo
+new-worktree                                    # should print its usage
+```
+
+Then start a session in each tool and confirm the doctrine is in context and
+the skills are listed. Two things are worth checking rather than assuming:
+
+- Whether Cursor reads user-level rules from `~/.cursor/rules/` or only from
+  its settings UI.
+- Whether each tool's skill scanner follows directory symlinks. If skills do
+  not appear, linking each `SKILL.md` file instead of its directory is a small
+  change to `install.sh`.
 
 ## agents/
 
@@ -64,6 +95,10 @@ It refuses `/tmp` and in-repo paths outright. Override the root with
 | Claude Code | `~/.claude/CLAUDE.md` (link) | `~/.claude/skills/` |
 | Codex | `~/.codex/AGENTS.md` (link) | `~/.codex/skills/` |
 | Cursor | `~/.cursor/rules/working-agreements.mdc` (generated) | `~/.cursor/skills-cursor/` |
+| Commands | — | `~/.local/bin/new-worktree` (link) |
+
+A tool whose directory is absent is skipped, so the same script runs on a
+machine with only one of them installed.
 
 Claude Code and Codex read plain markdown, so their doctrine is a symlink and
 edits apply immediately. Cursor needs `alwaysApply: true` frontmatter, so its
