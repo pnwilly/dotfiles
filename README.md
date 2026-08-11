@@ -7,6 +7,8 @@ agents/
   doctrine/core.md      always-on working agreements
   skills/<name>/        triggered runbooks, one directory per skill
   fm/                   per-tool frontmatter for generated files
+bin/
+  new-worktree          create a worktree at the path the doctrine specifies
 install.sh
 ```
 
@@ -40,6 +42,20 @@ directory serves all three and each is symlinked whole.
 attribution on commits, no `--force` — are currently prose, which means they
 depend on the model attending to the right line at the right moment. Real
 enforcement needs `~/.claude/settings.json` hooks and is Claude Code only.
+
+## bin/
+
+Commands that make a rule executable instead of remembered. `new-worktree`
+puts a worktree where the doctrine says it goes, branching from a freshly
+fetched integration branch so the primary checkout is never disturbed:
+
+```sh
+new-worktree feat/list-header             # from inside the repo
+new-worktree feat/list-header ~/code/app  # or name the repo
+```
+
+It refuses `/tmp` and in-repo paths outright. Override the root with
+`WORKTREE_ROOT` if a project needs to live elsewhere.
 
 ## Destinations
 

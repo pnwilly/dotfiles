@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#
+# Create a worktree at the path the doctrine specifies:
+#
+#   ~/worktrees/<project>/<branch-slug>/     slug replaces / with -
+#
+#   new-worktree <branch> [repo]
+#
+# Branches from the freshly fetched integration branch rather than whatever the
+# primary checkout happens to have, so the current working tree is never
+# touched and the new worktree cannot inherit an unsynced base.
+set -euo pipefail
+
+ROOT="${WORKTREE_ROOT:-$HOME/worktrees}"
+
+die() { printf 'new-worktree: %s\n' "$1" >&2; exit 1; }
+
+BRANCH="${1:-}"
+REPO_ARG="${2:-}"
+[[ -n $BRANCH ]] || die "usage: new-worktree <branch> [repo]"
+
+# Resolve the repository
+if [[ -n $REPO_ARG ]]; then
+  [[ -d $REPO_ARG ]] || die "no such directory: $REPO_ARG"
+  REPO=$(git -C "$REPO_ARG" rev-parse --show-toplevel 2>/dev/null) \
+    || die "not a git repository: $REPO_ARG"
+else
+  REPO=$(git rev-parse --show-toplevel 2>/dev/null) \
+    || die "not inside a git repository, and no repo argument given"
+fi
+
+# A worktree's parent repo is the main checkout, not another worktree
+REPO=$(git -C "$REPO" rev-parse --path-format=absolute --git-common-dir)
+REPO=$(cd "$(dirname "$REPO")" && pwd)
+
+PROJECT=$(basename "$REPO")
+SLUG=${BRANCH//\//-}
+TARGET="$ROOT/$PROJECT/$SLUG"
+
+case $TARGET in
+  /tmp/*) die "refusing to create a worktree under /tmp — it is not durable" ;;
+  "$REPO"/*) die "refusing to create a worktree inside the repository" ;;
+esac
+[[ -e $TARGET ]] && die "already exists: $TARGET"
+
+# Integration branch: whatever origin points HEAD at, else the usual names
+INTEGRATION=$(git -C "$REPO" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
+INTEGRATION=${INTEGRATION#origin/}
+if [[ -z $INTEGRATION ]]; then
+  for candidate in main master trunk; do
+    if git -C "$REPO" show-ref --verify --quiet "refs/remotes/origin/$candidate"; then
+      INTEGRATION=$candidate; break
+    fi
+  done
+fi
+[[ -n $INTEGRATION ]] || die "cannot determine the integration branch; set origin/HEAD"
+
+printf 'repo        %s\n' "$REPO"
+printf 'integration %s\n' "$INTEGRATION"
+printf 'worktree    %s\n' "$TARGET"
+
+git -C "$REPO" fetch --quiet origin "$INTEGRATION"
+
+mkdir -p "$(dirname "$TARGET")"
+if git -C "$REPO" show-ref --verify --quiet "refs/heads/$BRANCH"; then
+  printf 'branch      %s (existing)\n' "$BRANCH"
+  git -C "$REPO" worktree add "$TARGET" "$BRANCH"
+else
+  printf 'branch      %s (new, from origin/%s)\n' "$BRANCH" "$INTEGRATION"
+  # --no-track: a topic branch that tracks the integration branch reports
+  # itself as ahead of it and makes a bare `git push` ambiguous.
+  git -C "$REPO" worktree add --no-track -b "$BRANCH" "$TARGET" "origin/$INTEGRATION"
+fi
+
+printf '\ncd %s\n' "$TARGET"

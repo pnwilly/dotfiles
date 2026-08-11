@@ -124,6 +124,14 @@ install_tool "Cursor" "$HOME/.cursor" \
   "$HOME/.cursor/rules/working-agreements.mdc" generate "$HOME/.cursor/skills-cursor"
 
 say ""
+if [[ -d $HOME/.local/bin ]]; then
+  say "Commands"
+  apply link "$ROOT/bin/new-worktree" "$HOME/.local/bin/new-worktree"
+else
+  say "Commands — $HOME/.local/bin not present, skipped"
+fi
+
+say ""
 if (( fail )); then
   say "finished with conflicts — resolve the CONFLICT or MISSING lines above"
   exit 1
