@@ -12,14 +12,21 @@
 # alongside SKILL.md. Only Cursor's always-on rule needs tool-specific
 # frontmatter, so it is the single generated file; rerun this script after
 # editing agents/doctrine/core.md.
+#
+# Git hooks live under agents/hooks/ and are installed via core.hooksPath.
+# They run for every git commit on this machine (any AI tool, any shell) —
+# not Cursor-only — unless the caller passes --no-verify.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENTS="$ROOT/agents"
 CORE="$AGENTS/doctrine/core.md"
+HOOKS="$AGENTS/hooks"
+HOOKS_DEST="$HOME/.config/git/hooks"
 MARKER='^# Working Agreements$'
 
 SKILLS=(post-landing pr-strategy commit-grouping)
+HOOK_SCRIPTS=(prepare-commit-msg commit-msg)
 
 MODE=install
 case "${1:-}" in
@@ -111,6 +118,56 @@ install_tool() {
   done
 }
 
+install_git_hooks() {
+  local h current
+  say ""
+  say "Git hooks (all tools that call git commit)"
+  if [[ $MODE == uninstall ]]; then
+    for h in "${HOOK_SCRIPTS[@]}"; do
+      remove "$HOOKS_DEST/$h"
+    done
+    remove "$HOOKS_DEST/lib/no-ai-attribution.sh"
+    current=$(git config --global --get core.hooksPath 2>/dev/null || true)
+    if [[ $current == "$HOOKS_DEST" ]]; then
+      if [[ $MODE == dry ]]; then
+        say "  unset    core.hooksPath"
+      else
+        git config --global --unset core.hooksPath
+        say "  unset    core.hooksPath"
+      fi
+    elif [[ -n $current ]]; then
+      say "  SKIP     core.hooksPath=$current (not owned by this script)"
+    else
+      say "  absent   core.hooksPath"
+    fi
+    return
+  fi
+
+  for h in "${HOOK_SCRIPTS[@]}"; do
+    apply link "$HOOKS/$h" "$HOOKS_DEST/$h"
+  done
+  apply link "$HOOKS/lib/no-ai-attribution.sh" "$HOOKS_DEST/lib/no-ai-attribution.sh"
+
+  if [[ $MODE == dry ]]; then
+    say "  config   core.hooksPath=$HOOKS_DEST"
+    return
+  fi
+
+  # Make sure linked hooks are executable even if the umask dropped the bit.
+  chmod +x "$HOOKS/prepare-commit-msg" "$HOOKS/commit-msg"
+
+  current=$(git config --global --get core.hooksPath 2>/dev/null || true)
+  if [[ -z $current ]]; then
+    git config --global core.hooksPath "$HOOKS_DEST"
+    say "  set      core.hooksPath=$HOOKS_DEST"
+  elif [[ $current == "$HOOKS_DEST" ]]; then
+    say "  ok       core.hooksPath=$HOOKS_DEST"
+  else
+    say "  CONFLICT core.hooksPath=$current (expected $HOOKS_DEST) — left alone"
+    fail=1
+  fi
+}
+
 say "dotfiles — mode: $MODE"
 say "source: $ROOT"
 
@@ -130,6 +187,8 @@ if [[ -d $HOME/.local/bin ]]; then
 else
   say "Commands — $HOME/.local/bin not present, skipped"
 fi
+
+install_git_hooks
 
 say ""
 if (( fail )); then
