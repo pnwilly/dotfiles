@@ -69,10 +69,16 @@ appears, so they cost nothing the rest of the time. Claude Code, Codex, and
 Cursor all read `SKILL.md` with `name` and `description` frontmatter, so one
 directory serves all three and each is symlinked whole.
 
-**Hooks** are not here yet. The hard prohibitions in the doctrine — no AI
-attribution on commits, no `--force` — are currently prose, which means they
-depend on the model attending to the right line at the right moment. Real
-enforcement needs `~/.claude/settings.json` hooks and is Claude Code only.
+**Hooks** (`agents/hooks/`) are mechanical enforcement. `install.sh` symlinks
+them to `~/.config/git/hooks` and sets `core.hooksPath` there. Because they
+are git hooks, they run for **every** `git commit` on this machine — Cursor,
+Claude Code, Codex, and ordinary shell use alike — unless the caller passes
+`--no-verify`. They are not Cursor-specific.
+
+Today the hooks strip and then refuse AI attribution trailers
+(`Co-authored-by: Cursor`, `Made with Cursor`, and similar). They do **not**
+catch product UI that edits a PR body after `gh pr create`; scrub that in the
+PR skill or with a `gh` wrapper if it keeps coming back.
 
 ## bin/
 
@@ -90,12 +96,13 @@ It refuses `/tmp` and in-repo paths outright. Override the root with
 
 ## Destinations
 
-| Tool | Doctrine | Skills |
-|---|---|---|
-| Claude Code | `~/.claude/CLAUDE.md` (link) | `~/.claude/skills/` |
-| Codex | `~/.codex/AGENTS.md` (link) | `~/.codex/skills/` |
-| Cursor | `~/.cursor/rules/working-agreements.mdc` (generated) | `~/.cursor/skills-cursor/` |
-| Commands | — | `~/.local/bin/new-worktree` (link) |
+| Tool | Doctrine | Skills | Hooks |
+|---|---|---|---|
+| Claude Code | `~/.claude/CLAUDE.md` (link) | `~/.claude/skills/` | — |
+| Codex | `~/.codex/AGENTS.md` (link) | `~/.codex/skills/` | — |
+| Cursor | `~/.cursor/rules/working-agreements.mdc` (generated) | `~/.cursor/skills-cursor/` | — |
+| Git (all tools) | — | — | `~/.config/git/hooks` + `core.hooksPath` |
+| Commands | — | `~/.local/bin/new-worktree` (link) | — |
 
 A tool whose directory is absent is skipped, so the same script runs on a
 machine with only one of them installed.

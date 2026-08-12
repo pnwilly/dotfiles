@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# commit-msg — reject commits that still carry AI attribution.
+#
+# prepare-commit-msg strips the common injected trailers first. This hook is
+# the backstop if anything remains (or if prepare-commit-msg was skipped).
+set -euo pipefail
+
+MSG_FILE=${1:?commit message file required}
+
+HOOK_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=lib/no-ai-attribution.sh
+source "$HOOK_DIR/lib/no-ai-attribution.sh"
+
+if has_ai_attribution "$MSG_FILE"; then
+	# Strip once more in case prepare-commit-msg did not run, then re-check.
+	strip_ai_attribution "$MSG_FILE"
+fi
+
+if has_ai_attribution "$MSG_FILE"; then
+	cat >&2 <<'EOF'
+commit-msg: refused — AI / assistant attribution is not allowed.
+
+Remove Co-authored-by trailers for Cursor, Claude, Copilot, ChatGPT, etc.,
+and any "Made with" / "Generated with" assistant branding from the message.
+EOF
+	exit 1
+fi
+
+run_repo_hook commit-msg "$@"

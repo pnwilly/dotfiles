@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# prepare-commit-msg — strip AI attribution trailers before the commit is created.
+#
+# Runs for every `git commit` that uses this hooksPath (Cursor, Claude, Codex,
+# humans). Product UI that appends trailers after the fact is still caught by
+# commit-msg.
+set -euo pipefail
+
+MSG_FILE=${1:?commit message file required}
+
+HOOK_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=lib/no-ai-attribution.sh
+source "$HOOK_DIR/lib/no-ai-attribution.sh"
+
+strip_ai_attribution "$MSG_FILE"
+run_repo_hook prepare-commit-msg "$@"
