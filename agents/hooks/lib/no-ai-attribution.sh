@@ -7,14 +7,15 @@
 # (without these product names) are left alone.
 AI_ATTRIBUTION_TRAILER_ERE='^Co-authored-by:[[:space:]]*.*(Cursor|Claude|Copilot|ChatGPT|OpenAI|Anthropic|Gemini|Cody|Aider|Continue)'
 
-AI_ATTRIBUTION_BRANDING_ERE='^[[:space:]]*(Made with \[?Cursor\]?\.?|Generated with[[:space:]]+(Cursor|Claude|Copilot|ChatGPT|Copilot)\.?|Made-with:.*|Generated-by:.*)$'
+# Optional markdown link after the product name: Made with [Cursor](https://cursor.com)
+AI_ATTRIBUTION_BRANDING_ERE='^[[:space:]]*((Made|Generated) with[[:space:]]+\[?(Cursor|Claude|Copilot|ChatGPT|OpenAI|Anthropic|Gemini)\]?(\([^)]*\))?\.?|Made-with:.*|Generated-by:.*)$'
 
 strip_ai_attribution() {
 	local file=$1
 	local tmp
 	tmp=$(mktemp)
-	grep -Ev "$AI_ATTRIBUTION_TRAILER_ERE" "$file" \
-		| grep -Ev "$AI_ATTRIBUTION_BRANDING_ERE" \
+	grep -Evi "$AI_ATTRIBUTION_TRAILER_ERE" "$file" \
+		| grep -Evi "$AI_ATTRIBUTION_BRANDING_ERE" \
 		| sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba' >"$tmp" || true
 	mv "$tmp" "$file"
 }
