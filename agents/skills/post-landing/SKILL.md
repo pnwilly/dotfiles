@@ -7,7 +7,7 @@ description: >-
 ---
 # Post-landing
 
-Treat "landed" as an explicit request to run cleanup and make the release decision visible. Do not stop after only confirming the PR merged.
+Treat "landed" as an explicit request to run cleanup. Do not stop after only confirming the PR merged. Merge is not a release.
 
 ## 1. Clean up
 
@@ -42,11 +42,16 @@ git fetch --prune origin
 4. Fix issues before the release decision unless they need user input.
 5. If the integration branch accepts direct post-landing cleanup commits, commit fixes there; otherwise open a short fix branch and PR.
 
-## 3. Make the release decision explicit
+## 3. Release decision
 
-- If the user says **release**, **tag**, **ship**, **deploy**, **tester**, or otherwise asks for a versioned handoff, follow the **repo's** release bookwork.
-- If the user only says **landed**, and the change is user-facing, fixes production behavior, or is stable enough to hand to a tester, ask one concise question: cut a PATCH or MINOR release, with the recommended version.
-- If no release is cut, say exactly why.
+Repo `AI.md` / `AGENTS.md` wins. Default when the repo does not define a tighter cadence:
+
+- Version numbers track the **last git tag**. Do not bump version in feature PRs.
+- If the user says **release**, **tag**, **ship**, **deploy**, or **tester**, follow the repo's release bookwork.
+- If the user only says **landed**, do not ask to tag. Report last tag and commits on the integration branch since that tag, in one line.
+- Suggest a ship only when unreleased work has **accumulated** (a handful of features, end of a working day, or something that will actually be installed or deployed) or the landed change is a production hotfix. Recommend one version for the whole batch, then wait for an explicit yes.
+- A single merged PR is not accumulation. Do not ask.
+- If no release is cut, say so in that one line. Do not turn it into a question.
 
 ## Published attribution
 
