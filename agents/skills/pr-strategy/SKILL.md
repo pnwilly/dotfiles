@@ -1,9 +1,10 @@
 ---
 name: pr-strategy
 description: >-
-  Decide how uncommitted or in-flight work should be divided into pull requests.
-  Use when the user asks for a PR strategy, whether changes belong in one PR, or
-  how to slice a dirty working tree before committing.
+  Decide how dirty or in-flight work should be divided into commits and pull
+  requests before staging. Use for explicit PR-strategy questions and for any
+  commit, push, rebase, or PR request when the branch contains multiple user
+  outcomes, schema migrations, security changes, or unrelated concerns.
 ---
 # PR strategy
 
@@ -26,9 +27,12 @@ Decide the shape of the delivery before touching git. This is the decision layer
 
 ## Before staging or committing
 
-1. Run `git diff --stat` and name the concern this change belongs to.
-2. If unrelated concerns are mixed, split before committing unless the user wants one coordinated PR.
-3. Do not commit unless asked. When the user says "put this in a branch", confirm scope first if the tree mixes concerns.
+1. Read the applicable repo instructions for land-alone and merge constraints.
+2. Run `git status`, `git diff --stat`, and enough of the diff to inventory every distinct user-requested outcome.
+3. Map every outcome to exactly one proposed commit and PR before staging.
+4. If unrelated concerns are mixed, split them into commits even when the user wants one coordinated PR.
+5. Split into separate PRs when repo policy or isolated-revert value requires it. If the user authorized only one PR, get approval before opening several.
+6. Do not commit unless asked. When the user says "put this in a branch", confirm scope first if the tree mixes concerns.
 
 ## Red flags
 
@@ -38,6 +42,12 @@ Stop and split unless the user chooses one coordinated PR:
 - Security fix plus new feature plus unrelated refresh together
 - "While we're here" refactors mixed with the actual request
 - A squash-merge title that must describe multiple unrelated outcomes
+- A proposed commit subject that needs "and", "cleanup", "workflows", or "improvements" to cover distinct outcomes
+- Multiple user requests collapsed because they touch the same file
+
+## Shared files are not coupling
+
+A manifest, registry, changelog, generated index, or test file can belong to several concerns. Stage individual hunks with `git add -p` or an equivalent index patch. Each commit must include only its own entries and must leave every referenced file present. Do not collapse concerns merely to avoid partial staging.
 
 ## Output
 
