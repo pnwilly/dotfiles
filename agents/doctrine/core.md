@@ -41,6 +41,7 @@ Stashes are not branches: no history, no label, easy to lose. No ad-hoc parking 
 ## Commits
 
 - Treat commits as durable, independently reviewable units. Design the intended final sequence before substantial implementation.
+- Before staging a dirty tree, inventory the distinct user-requested outcomes and map each to a commit and PR. A shared manifest, registry, changelog, or test file is not coupling; stage its hunks with the concern they belong to.
 - Group by purpose, not chronology or file type. Tests, docs, and config ship inside the implementation commit they complete, never as separate "add tests" or "update docs" commits.
 - Conventional Commit subjects describing complete concerns. No "follow-up", "review fixes", or "cleanup" subjects that only describe how the branch was developed.
 - **Never add AI or assistant attribution** to commits, PR titles or bodies, GitHub Releases, or other published handoff text. No `Co-authored-by` for Claude, Cursor, Copilot, ChatGPT or similar; no "Generated with…"; no assistant branding. This includes self-coauthor trailers injected by cloud tooling.
@@ -57,6 +58,7 @@ Prefer a low PR cadence when CI bills per open PR: one PR carries a batch of com
 - Push the branch freely for backup. Hold the PR until the batch is ready so CI runs once against the finished batch.
 - Land the batch when it reaches a coherent set: a handful of features, the end of a working day, or something needing production, whichever comes first.
 - **Land alone immediately, outside any batch:** `hotfix/` branches, anything blocking production, and changes whose isolated revert or blame value is high (schema migrations, auth changes). A batch must never delay a production fix.
+- A coordinated batch PR still needs one commit per concern. Permission to use one PR never implies permission to squash unrelated concerns into one commit.
 - Follow the repo's merge style. With no rule, prefer rebase-merge for several durable commits and squash for one durable concern or review noise; never a plain merge commit when the target history is linear.
 
 ## Implementation
