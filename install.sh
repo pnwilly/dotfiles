@@ -16,6 +16,10 @@
 # Git hooks live under agents/hooks/ and are installed via core.hooksPath.
 # They run for every git commit on this machine (any AI tool, any shell) —
 # not Cursor-only — unless the caller passes --no-verify.
+#
+# Claude Code hooks live under agents/claude/hooks/, are linked into
+# ~/.claude/hooks/, and are registered by merging one entry into
+# ~/.claude/settings.json; the rest of that file is left untouched.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,6 +31,8 @@ MARKER='^# Working Agreements$'
 
 SKILLS=(post-landing prepare-pr pr-strategy commit-grouping verify-before-done taste-review root-cause)
 HOOK_SCRIPTS=(prepare-commit-msg commit-msg)
+CLAUDE_HOOKS="$AGENTS/claude/hooks"
+CLAUDE_HOOK_DEST="$HOME/.claude/hooks/lint-on-edit"
 
 MODE=install
 case "${1:-}" in
@@ -168,6 +174,50 @@ install_git_hooks() {
   fi
 }
 
+# register_claude_hook <add|remove> — PostToolUse entry for lint-on-edit
+register_claude_hook() {
+  local action=$1 settings="$HOME/.claude/settings.json"
+  if [[ $MODE == dry ]]; then
+    say "  $action   PostToolUse lint-on-edit in $settings"; return
+  fi
+  python3 - "$action" "$settings" "$CLAUDE_HOOK_DEST" <<'PY' | while read -r line; do say "  $line"; done
+import json, os, sys
+action, path, command = sys.argv[1:]
+settings = json.load(open(path)) if os.path.exists(path) else {}
+entries = settings.setdefault("hooks", {}).setdefault("PostToolUse", [])
+mine = [e for e in entries if any(h.get("command") == command for h in e.get("hooks", []))]
+if action == "add" and mine:
+    print(f"ok       PostToolUse lint-on-edit in {path}"); sys.exit()
+if action == "remove" and not mine:
+    print(f"absent   PostToolUse lint-on-edit in {path}"); sys.exit()
+if action == "add":
+    entries.append({"matcher": "Edit|MultiEdit|Write",
+                    "hooks": [{"type": "command", "command": command}]})
+else:
+    entries[:] = [e for e in entries if e not in mine]
+    if not entries: del settings["hooks"]["PostToolUse"]
+    if not settings["hooks"]: del settings["hooks"]
+json.dump(settings, open(path, "w"), indent=2)
+open(path, "a").write("\n")
+print(f"{'registered' if action == 'add' else 'unregistered'} PostToolUse lint-on-edit in {path}")
+PY
+}
+
+install_claude_hooks() {
+  say ""
+  if [[ ! -d $HOME/.claude ]]; then
+    say "Claude Code hooks — $HOME/.claude not present, skipped"; return
+  fi
+  say "Claude Code hooks"
+  if [[ $MODE == uninstall ]]; then
+    register_claude_hook remove
+    remove "$CLAUDE_HOOK_DEST"
+    return
+  fi
+  link "$CLAUDE_HOOKS/lint-on-edit" "$CLAUDE_HOOK_DEST"
+  register_claude_hook add
+}
+
 say "dotfiles — mode: $MODE"
 say "source: $ROOT"
 
@@ -189,6 +239,7 @@ else
 fi
 
 install_git_hooks
+install_claude_hooks
 
 say ""
 if (( fail )); then

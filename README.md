@@ -7,6 +7,8 @@ agents/
   doctrine/core.md      always-on working agreements
   skills/<name>/        triggered runbooks, one directory per skill
   fm/                   per-tool frontmatter for generated files
+  hooks/                git hooks, installed for every commit
+  claude/hooks/         Claude Code tool hooks
 bin/
   new-worktree          create a worktree at the path the doctrine specifies
 install.sh
@@ -18,6 +20,8 @@ install.sh
 - GNU coreutils — `install.sh` uses `readlink -f`, which BSD and macOS lack
 - `~/.local/bin` on `PATH`, for `bin/`. The installer skips commands if that
   directory does not exist; create it first if you want them
+- `python3`, which `install.sh` uses to merge Claude Code hook entries into
+  `~/.claude/settings.json` and the `lint-on-edit` hook uses to read its input
 - `gh`, authenticated. The post-landing skill drives `gh pr view`,
   `gh release view`, and `gh pr edit`
 
@@ -75,13 +79,23 @@ are git hooks, they run for **every** `git commit` on this machine — Cursor,
 Claude Code, Codex, and ordinary shell use alike — unless the caller passes
 `--no-verify`. They are not Cursor-specific.
 
+**Claude Code hooks** (`agents/claude/hooks/`) run after the agent edits a
+file. `install.sh` links them into `~/.claude/hooks/` and adds one
+`PostToolUse` entry per hook to `~/.claude/settings.json`, leaving the rest of
+that file alone; `--uninstall` removes only that entry. `lint-on-edit` lints
+the edited file with the linter its repo already configures (ruff for Python,
+a local eslint for JS/TS) and sends violations back to the agent. It only
+reports and never rewrites the file, so small edits do not bring whole-file
+formatting changes with them, and it stays silent in repos with no linter
+configured.
+
 The quality skills split the work: `verify-before-done` runs the repo's
 required checks and reports what actually ran, `root-cause` sets the order of
 work for a bug fix, and `taste-review` reviews maintainability against the repo
 contract. Claude Code already includes `/code-review`, `/simplify`, and
 `/security-review`, so they are not copied here.
 
-Today the hooks strip and then refuse AI attribution trailers
+Today the git hooks strip and then refuse AI attribution trailers
 (`Co-authored-by: Cursor`, `Made with Cursor`, and similar). They do **not**
 catch product UI that edits a PR body after `gh pr create`; scrub that in the
 PR skill or with a `gh` wrapper if it keeps coming back.
@@ -104,7 +118,7 @@ It refuses `/tmp` and in-repo paths outright. Override the root with
 
 | Tool | Doctrine | Skills | Hooks |
 |---|---|---|---|
-| Claude Code | `~/.claude/CLAUDE.md` (link) | `~/.claude/skills/` | — |
+| Claude Code | `~/.claude/CLAUDE.md` (link) | `~/.claude/skills/` | `~/.claude/hooks/` + `settings.json` entry |
 | Codex | `~/.codex/AGENTS.md` (link) | `~/.codex/skills/` | — |
 | Cursor | `~/.cursor/rules/working-agreements.mdc` (generated) | `~/.cursor/skills-cursor/` | — |
 | Git (all tools) | — | — | `~/.config/git/hooks` + `core.hooksPath` |
