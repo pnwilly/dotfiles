@@ -25,7 +25,7 @@ HOOKS="$AGENTS/hooks"
 HOOKS_DEST="$HOME/.config/git/hooks"
 MARKER='^# Working Agreements$'
 
-SKILLS=(post-landing prepare-pr pr-strategy commit-grouping)
+SKILLS=(post-landing prepare-pr pr-strategy commit-grouping verify-before-done taste-review root-cause)
 HOOK_SCRIPTS=(prepare-commit-msg commit-msg)
 
 MODE=install

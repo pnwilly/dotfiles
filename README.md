@@ -75,6 +75,12 @@ are git hooks, they run for **every** `git commit` on this machine — Cursor,
 Claude Code, Codex, and ordinary shell use alike — unless the caller passes
 `--no-verify`. They are not Cursor-specific.
 
+The quality skills split the work: `verify-before-done` runs the repo's
+required checks and reports what actually ran, `root-cause` sets the order of
+work for a bug fix, and `taste-review` reviews maintainability against the repo
+contract. Claude Code already includes `/code-review`, `/simplify`, and
+`/security-review`, so they are not copied here.
+
 Today the hooks strip and then refuse AI attribution trailers
 (`Co-authored-by: Cursor`, `Made with Cursor`, and similar). They do **not**
 catch product UI that edits a PR body after `gh pr create`; scrub that in the
