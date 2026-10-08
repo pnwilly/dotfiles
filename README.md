@@ -95,6 +95,9 @@ work for a bug fix, and `taste-review` reviews maintainability against the repo
 contract. Claude Code already includes `/code-review`, `/simplify`, and
 `/security-review`, so they are not copied here.
 
+The `concise-validation-messages` skill keeps application alerts short and
+precise, with useful values, units, and corrective actions.
+
 Today the git hooks strip and then refuse AI attribution trailers
 (`Co-authored-by: Cursor`, `Made with Cursor`, and similar). They do **not**
 catch product UI that edits a PR body after `gh pr create`; scrub that in the
