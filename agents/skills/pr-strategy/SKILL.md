@@ -12,7 +12,7 @@ Decide the shape of the delivery before touching git. This is the decision layer
 
 ## Default
 
-1. One batch PR with one commit per concern. Propose separate PRs only when a piece qualifies to land alone: hotfix, blocking production, or high isolated-revert value (schema migrations, auth changes).
+1. List open pull requests first. Add new work as its own commit on an open pull request that targets the integration branch, then broaden that title and leave the branch name. A different review context is another commit on that pull request. Open a new pull request only when no eligible one is open, or when the work or the open pull request must stay separate: hotfix, blocking production, schema migration, auth change, or a Dependabot or other bot pull request. When several eligible pull requests are open, continue the one this work belongs to, and ask when none of them is that batch.
 2. Every PR targets the integration branch directly. No stacked PRs.
 3. Confirm each PR is independently mergeable.
 4. If changes are too coupled to split cleanly, say so and recommend a single PR.
@@ -20,7 +20,7 @@ Decide the shape of the delivery before touching git. This is the decision layer
 
 | Situation | Guidance |
 |---|---|
-| Default | Prefer one PR unless each slice has its own test plan and merges cleanly alone. |
+| Default | Add a commit to an open pull request. Open another only when none is eligible, or for a hotfix, a production block, a schema or auth change, or a bot pull request. |
 | Ride-along polish | Copy, aria labels, and small layout tweaks from the same user-facing flow may ship with the primary change when the squash title names one outcome. |
 | Split when | Boundaries are obvious: schema + migration + API for one feature vs unrelated UI; security fix vs new feature; refactors the user did not ask for. |
 | Do not split | Only to reduce file count. |
@@ -31,12 +31,12 @@ Decide the shape of the delivery before touching git. This is the decision layer
 2. Run `git status`, `git diff --stat`, and enough of the diff to inventory every distinct user-requested outcome.
 3. Map every outcome to exactly one proposed commit and PR before staging.
 4. If unrelated concerns are mixed, split them into commits even when the user wants one coordinated PR.
-5. Split into separate PRs when repo policy or isolated-revert value requires it. If the user authorized only one PR, get approval before opening several.
+5. Check `gh pr list` before opening a pull request. Add the commit to an eligible open pull request. A separate review context stays one commit. Ask before opening another pull request.
 6. Do not commit unless asked. When the user says "put this in a branch", confirm scope first if the tree mixes concerns.
 
 ## Red flags
 
-Stop and split unless the user chooses one coordinated PR:
+Stop and use a separate commit on the open pull request. Use a separate pull request only when one concern must land alone, or the open pull request is a bot or land-alone pull request:
 
 - Schema or migration plus unrelated UI in one commit
 - Security fix plus new feature plus unrelated refresh together

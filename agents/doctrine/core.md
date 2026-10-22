@@ -54,8 +54,11 @@ Stashes are not branches: no history, no label, easy to lose. No ad-hoc parking 
 
 Prefer a low PR cadence when CI bills per open PR: one PR carries a batch of completed concerns, not one PR per change, unless the repo contract says otherwise.
 
-- Continue the open batch branch when starting new work; cut a fresh one from the synced integration branch only when no batch is open.
-- Push the branch freely for backup. Hold the PR until the batch is ready so CI runs once against the finished batch.
+- Before opening a pull request, list the open ones. Add the new work as its own commit on an open pull request that targets the integration branch. Broaden that pull request's title and leave its branch name.
+- A different review context stays a separate commit on that same pull request. From a worktree or another checkout, commit onto that pull request's branch.
+- Keep a change on its own pull request when it is a `hotfix/`, it is blocking production, or it is a schema migration or an auth change. Leave Dependabot and other bot pull requests untouched. Open a fresh pull request when the only open one is a bot or one of those land-alone pulls.
+- When more than one eligible pull request is open, continue the one this work belongs to, and ask when none of them is that batch. Cut a fresh branch from the synced integration branch only when no eligible pull request is open.
+- Push the branch freely for backup. Hold the first pull request until the batch is ready so CI runs once. Once it is open, later concerns join it.
 - Land the batch when it reaches a coherent set: a handful of features, the end of a working day, or something needing production, whichever comes first.
 - **Land alone immediately, outside any batch:** `hotfix/` branches, anything blocking production, and changes whose isolated revert or blame value is high (schema migrations, auth changes). A batch must never delay a production fix.
 - A coordinated batch PR still needs one commit per concern. Permission to use one PR never implies permission to squash unrelated concerns into one commit.

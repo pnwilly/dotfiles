@@ -11,7 +11,7 @@ The PR is the delivery envelope; commits are the durable units inside it. Before
 
 1. **Group by purpose, not chronology or file type.** One coherent change plus the docs, tests, and config that complete it. No separate "add tests" or "update docs" commits when those edits only support an implementation commit.
 2. **Isolate durable planning when it stands alone.** A plan or ADR may form a documentation commit before implementation when it establishes a contract worth reviewing and citing independently.
-3. **Name the PR and branch for the shared outcome.** If scope expands but stays one coherent outcome, broaden the framing. If commits no longer share a review context, split the work.
+3. **Add the commit to an open pull request.** List open pull requests first. A different review context is another commit on an eligible open pull request; broaden its title and leave the branch name. Open a new pull request only when none is eligible, or when the work or that pull request is a hotfix, a production block, a schema or auth change, or from Dependabot or another bot.
 4. **Treat corrective commits as temporary unless they stand alone.** Amend the tip, or use `fixup!` and fold before opening the PR.
 5. **Review the history as a deliverable.** Every subject must explain a complete concern without words like "follow-up", "review fixes", or "cleanup".
 
