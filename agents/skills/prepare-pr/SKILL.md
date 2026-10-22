@@ -20,6 +20,7 @@ git status -sb
 git diff --stat
 git diff
 git log --oneline --decorate -n 12
+gh pr list --state open
 ```
 
 Preserve unrelated changes. Use an isolated worktree when the current checkout is dirty with work outside the requested delivery.
@@ -30,7 +31,7 @@ List every distinct user-requested outcome in the diff. Map each outcome to exac
 
 Use the PR-strategy rules whenever there is more than one outcome or any schema migration, auth change, hotfix, security change, or independently revertible concern. Use the commit-grouping rules to order the commits inside each PR.
 
-Do not stage until the proposed final log and PR split have been stated. If the strategy requires multiple PRs but the user authorized only one, ask before opening additional PRs.
+Do not stage until the proposed final log and PR split have been stated. Add the new commit to an eligible open pull request. Skip Dependabot and other bot pull requests, and skip a pull request that must land alone. Open a new pull request only when no eligible one exists, or when this change itself must land alone. Ask before opening an additional pull request.
 
 ## 3. Reject false coupling
 
@@ -62,7 +63,7 @@ Open ready PRs unless the user requested drafts. Verify the published title and 
 
 ## Behavioral checks
 
-- Several accumulated requests including a migration: isolate the migration PR and keep one commit per remaining concern.
+- Several accumulated requests including a schema migration: put the schema migration on its own pull request and keep one commit per remaining concern on the open batch. A data patch joins the open batch.
 - Two concerns add entries to one patch manifest: stage each entry with its own migration; do not combine the concerns.
 - One feature spans backend, frontend, migration, and tests: keep those pieces together when they implement one revertible outcome.
 - A proposed umbrella subject joins outcomes with "and": repeat the inventory and grouping review.
