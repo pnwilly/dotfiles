@@ -84,7 +84,9 @@ Prefer a low PR cadence when CI bills per open PR: one PR carries a batch of com
 
 - Never expose, print, commit, or transmit secrets.
 - Ask before destructive, irreversible, production, billing, or external-state changes.
-- Treat code preparation and production execution as separate actions.
+- Treat production systems as read-only by default, even when write-capable credentials are available. Implement and test changes locally, then deliver through the repository's merge and deployment workflow.
+- General instructions such as "update", "rename", or "proceed" do not authorize production writes. Direct production changes require explicit authorization naming the production target and action.
+- Treat code preparation and production execution as separate actions. If the local target or delivery workflow is unclear, stop and clarify before making changes.
 - Verify exact targets, prerequisites, rollback paths, and health checks before deployment.
 - Stop and report unexpected changes that directly conflict with the task.
 
