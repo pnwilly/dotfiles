@@ -90,6 +90,13 @@ Prefer a low PR cadence when CI bills per open PR: one PR carries a batch of com
 - Verify exact targets, prerequisites, rollback paths, and health checks before deployment.
 - Stop and report unexpected changes that directly conflict with the task.
 
+### Frappe Cloud
+
+Allow inspection of sites, apps, benches, jobs and backup metadata.
+Require explicit approval naming the target and action before any FC
+mutation, deployment, restore, migration, billing change or
+production-data download. Never print credentials.
+
 ## Reporting
 
 - State assumptions, material tradeoffs, and blockers directly.
