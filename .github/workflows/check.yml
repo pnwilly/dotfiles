@@ -1,0 +1,62 @@
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax and lint
+        run: |
+          scripts=(install.sh bin/new-worktree agents/hooks/commit-msg agents/hooks/prepare-commit-msg agents/hooks/lib/no-ai-attribution.sh agents/claude/hooks/lint-on-edit)
+          for script in "${scripts[@]}"; do bash -n "$script"; done
+          shellcheck -x -P SCRIPTDIR "${scripts[@]}"
+
+      - name: Whitespace
+        run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD
+
+      - name: Skill frontmatter
+        run: |
+          for skill in agents/skills/*/; do
+            name=$(basename "$skill")
+            file="$skill/SKILL.md"
+            head -1 "$file" | grep -qx -- '---' || { echo "$file: missing frontmatter"; exit 1; }
+            grep -qx "name: $name" "$file" || { echo "$file: name must be $name"; exit 1; }
+            grep -q '^description: .' "$file" || { echo "$file: missing description"; exit 1; }
+            grep -q "\b$name\b" <(sed -n '/^SKILLS=(/p' install.sh) || { echo "$name: not listed in install.sh SKILLS"; exit 1; }
+          done
+
+      - name: Install into an empty home
+        run: |
+          export HOME="$RUNNER_TEMP/home"
+          mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.cursor" "$HOME/.local/bin"
+          ./install.sh --dry-run
+          ./install.sh
+          ./install.sh
+          for link in .claude/CLAUDE.md .codex/AGENTS.md; do
+            [[ $(readlink -f "$HOME/$link") == "$PWD/agents/doctrine/core.md" ]] || { echo "$link is not linked to core.md"; exit 1; }
+          done
+          for skill in agents/skills/*/; do
+            [[ -L $HOME/.claude/skills/$(basename "$skill") ]] || { echo "skill $(basename "$skill") not linked"; exit 1; }
+          done
+          rule="$HOME/.cursor/rules/working-agreements.mdc"
+          { head -1 "$rule" | grep -qx -- '---' && grep -qx '# Working Agreements' "$rule"; } || { echo "Cursor rule is malformed"; exit 1; }
+          ./install.sh --uninstall
+          [[ ! -e $HOME/.claude/CLAUDE.md ]] || { echo "uninstall left CLAUDE.md"; exit 1; }
+
+      - name: Commit hooks strip AI attribution
+        run: |
+          message="$RUNNER_TEMP/message"
+          printf 'docs: example\n\nCo-authored-by: Claude <noreply@anthropic.com>\n' > "$message"
+          agents/hooks/commit-msg "$message"
+          if grep -qi 'claude' "$message"; then echo "attribution was not stripped"; exit 1; fi
+          printf 'docs: example\n' > "$message"
+          agents/hooks/commit-msg "$message"
