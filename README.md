@@ -98,6 +98,11 @@ contract. Claude Code already includes `/code-review`, `/simplify`, and
 The `concise-validation-messages` skill keeps application alerts short and
 precise, with useful values, units, and corrective actions.
 
+The `frappe-site-api` skill covers working with a running Frappe site's REST
+API: credentials kept in `~/.config/<site>/env` (never in this repo), reads
+without approval, writes only with approval naming the site and action, and
+the request details that otherwise cost a retry.
+
 Today the git hooks strip and then refuse AI attribution trailers
 (`Co-authored-by: Cursor`, `Made with Cursor`, and similar). They do **not**
 catch product UI that edits a PR body after `gh pr create`; scrub that in the
