@@ -29,7 +29,7 @@ HOOKS="$AGENTS/hooks"
 HOOKS_DEST="$HOME/.config/git/hooks"
 MARKER='^# Working Agreements$'
 
-SKILLS=(post-landing prepare-pr pr-strategy commit-grouping verify-before-done taste-review root-cause concise-validation-messages)
+SKILLS=(post-landing prepare-pr pr-strategy commit-grouping verify-before-done taste-review root-cause concise-validation-messages frappe-site-api)
 HOOK_SCRIPTS=(prepare-commit-msg commit-msg)
 CLAUDE_HOOKS="$AGENTS/claude/hooks"
 CLAUDE_HOOK_DEST="$HOME/.claude/hooks/lint-on-edit"
