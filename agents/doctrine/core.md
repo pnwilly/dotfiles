@@ -102,4 +102,4 @@ production-data download. Never print credentials.
 - State assumptions, material tradeoffs, and blockers directly.
 - At completion, report the outcome, the validation performed, and remaining risks.
 - State clearly when work remains uncommitted, unpushed, untested, or undeployed.
-- After creating or changing a document on any Frappe site (live, Frappe Cloud, or local dev), link to it in the reply: `<site-url>/desk/<doctype-slug>/<name>`, or `/app/` on Frappe v15 and earlier. List one link per document.
+- Link every Frappe document a reply names (live, Frappe Cloud, or local dev), whether created, changed, listed, or proposed for action: `<site-url>/desk/<doctype-slug>/<url-encoded name>`, or `/app/` on Frappe v15 and earlier. In a table or list, make the name itself the link.
